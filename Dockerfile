@@ -1,0 +1,1 @@
+# docker run -d --name rethinkdb -v rethinkdb:/data -p 8080:8080 -p 28015:28015 rethinkdb:2.4.2
