@@ -2,7 +2,7 @@ import type { Message } from '$lib/shared/models/message.model';
 import pkg, { type Connection, type Cursor, type Table } from 'rethinkdb';
 import type { Room } from '../shared/models/room.model';
 
-const { connect, db, row, asc } = pkg;
+const { connect, db, dbCreate, row, asc } = pkg;
 
 const _db = db('dev'); //! use env.environment "dev" "prd"
 
@@ -13,17 +13,21 @@ export async function getTable(table: string): Promise<Table> {
 }
 
 export async function getConnection(): Promise<Connection> {
-	return await connect({ host: 'localhost', port: 28015 });
+	try {
+		return await connect({ host: 'rethinkdb', port: 28015 });
+	} catch {
+		return await connect({ host: 'localhost', port: 28015 });
+	}
 }
 
 export async function EnsureDatabaseExists(): Promise<void> {
 	const connection = await getConnection();
+
 	try {
+		await dbCreate('dev').run(connection);
 		await _db.tableCreate('rooms').run(connection);
-	} catch (e) {}
-	try {
 		await _db.tableCreate('messages').run(connection);
-	} catch (e) {}
+	} catch (e) { }
 
 	console.info('Ensured DB and tables exist');
 	await connection.close();

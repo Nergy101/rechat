@@ -1,0 +1,43 @@
+# docker run -d --name rethinkdb -v rethinkdb:/data -p 8080:8080 -p 28015:28015 rethinkdb:2.4.2
+
+version: "3.9"
+services:
+  rethinkdb:
+    image: rethinkdb:2.4.2
+    volumes:
+    - rethinkdb:/data
+    ports:
+    - "8080:8080"
+    - "28015:28015"
+    expose:
+     - "8080"
+    networks:
+      - rdb-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 3s
+
+  app:
+    image: nergy101/rechat:v1
+    ports:
+    - "3000:3000"
+    expose:
+     - "3000"
+    depends_on:
+      rethinkdb:
+        condition: service_healthy
+    environment:
+      - NODE_OPTIONS="--max-old-space-size=8192"
+    networks:
+      - rdb-net
+    mem_limit: 8192m
+    mem_reservation: 300m
+
+volumes:
+  rethinkdb:
+
+networks:
+  rdb-net:
